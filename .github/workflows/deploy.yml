@@ -33,3 +33,14 @@ jobs:
         
         echo "Pushing image $IMAGE_TAG"
         docker push $IMAGE_TAG
+
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Restart Azure Web App
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          az webapp restart --name app-asset-pilot --resource-group prodessy

@@ -7,8 +7,10 @@ terraform {
   }
   
   backend "azurerm" {
-    # The configuration for this backend will be passed in via CLI arguments
-    # during the pipeline execution (e.g. storage_account_name, container_name, key, etc.)
+    resource_group_name  = "prodessy"
+    storage_account_name = "tfstateprod178967"
+    container_name       = "tfstate"
+    key                  = "asset-pilot-node.tfstate"
   }
 }
 
