@@ -48,7 +48,7 @@ export function validateQuery<T>(schema: ZodType<T>): RequestHandler {
             return;
         }
 
-        req.query = parsed.data as typeof req.query;
+        // req.query = parsed.data as typeof req.query;
         next();
     };
 }

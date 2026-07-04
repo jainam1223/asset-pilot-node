@@ -39,7 +39,9 @@ import {
     findRequestsByRequester,
     findSupportRequestDetail,
     findSupportRequestsByRequester,
+    findUserByEmail,
     findUserById,
+    getItemCategoryRepo,
     getMyDevicesByUserId,
     initiateWfhReturn,
     rejectHandoverForOwner,
@@ -146,6 +148,10 @@ function mapWorkflowError(error: unknown): never {
     throw mapped[error.message] ?? error;
 }
 
+export async function getUserService(email: string) {
+    return await findUserByEmail(email);
+}
+
 export async function getMyRequestByUserId(userId: string) {
     const user = await findUserById(userId);
     if (!user) {
@@ -172,10 +178,21 @@ export async function getCurrentUser(userId: string): Promise<User> {
     return user;
 }
 
+export async function getItemCategoryService() {
+    return getItemCategoryRepo();
+}
+
 export async function getMyRequests(
     userId: string,
 ): Promise<RequestWithCategoryAndItem[]> {
     const user = await getCurrentUser(userId);
+    if (!user) {
+        throw new AppError(
+            'Authenticated user not found',
+            401,
+            'authenticated_user_not_found',
+        );
+    }
     return findRequestsByRequester(user.id);
 }
 
@@ -188,7 +205,15 @@ export async function getMyDevices(userId: string) {
             'authenticated_user_not_found',
         );
     }
-    return await getMyDevicesByUserId(userId);
+    const response = await getMyDevicesByUserId(userId);
+    const data = response.map((req) => {
+        const { assignedItem, ...re } = req;
+        return {
+            ...assignedItem,
+            ...re,
+        };
+    });
+    return data;
 }
 
 export async function getDeviceDetail(

@@ -1,5 +1,8 @@
 import type { Request, Response } from 'express';
-import { buildSuccessResponse } from '../../common/api-response';
+import {
+    buildErrorResponse,
+    buildSuccessResponse,
+} from '../../common/api-response';
 import { AppError } from '../../common/errors/app-error';
 import type {
     ApproveRequestDto,
@@ -27,10 +30,12 @@ import {
     getApprovalsForManager,
     getDeviceDetail,
     getExtensionRequestDetail,
+    getItemCategoryService,
     getMyDevices,
     getMyRequestByUserId,
     getMyRequests,
     getSupportRequestDetail,
+    getUserService,
     initiateReturn,
     listExtensionRequests,
     listHandoverRequests,
@@ -55,6 +60,18 @@ function getAuthenticatedUserId(req: { user?: { id: string } }): string {
 
 export function getHealth(_req: Request, res: Response): void {
     res.json(buildSuccessResponse({ status: 'ok' }, 'Server is healthy'));
+}
+
+export async function login(req: Request, res: Response) {
+    const user = await getUserService(req.body.email);
+    if (!user) {
+        res.json(buildErrorResponse('User not found', 404, '404'));
+    } else res.json(buildSuccessResponse(user, 'User loggedin'));
+}
+
+export async function getItemCategory(req: Request, res: Response) {
+    const categories = await getItemCategoryService();
+    res.json(buildSuccessResponse(categories, 'Fetched item category'));
 }
 
 export async function listMyDevices(

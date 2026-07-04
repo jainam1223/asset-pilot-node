@@ -22,6 +22,8 @@ import {
     submitSupportRequest,
     getMyRequest,
     listMyRequests,
+    getItemCategory,
+    login,
 } from './mobile.controller';
 import {
     approveRequestSchema,
@@ -48,6 +50,10 @@ import {
 const router = Router();
 
 router.get('/health', getHealth);
+
+router.post('/login', login);
+
+router.get('/items-category', getItemCategory);
 router.get('/me/requests', listMyRequests);
 router.get('/me/devices', listMyDevices);
 // router.get('/me/assigned-devices', listMyDevices)
@@ -57,11 +63,11 @@ router.get(
     getMyDeviceDetail,
 );
 router.post('/me/requests', validateBody(createRequestSchema), submitRequest);
-router.get(
-    '/me/request',
-    //   validateBody({ query: listMyRequestsQuerySchema }),
-    getMyRequest,
-);
+// router.get(
+//     '/me/request',
+//     //   validateBody({ query: listMyRequestsQuerySchema }),
+//     getMyRequest,
+// );
 
 router.get('/manager/approvals', listManagerApprovals);
 router.patch(

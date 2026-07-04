@@ -79,6 +79,16 @@ function buildFallbackUser(id: string): User {
     } as User;
 }
 
+export async function findUserByEmail(email: string) {
+    return await prisma.user.findUnique({
+        where: { email },
+    });
+}
+
+export async function getItemCategoryRepo() {
+    return await prisma.itemCategory.findMany();
+}
+
 export async function findUserById(id: string): Promise<User | null> {
     const user = await prisma.user.findUnique({ where: { id } });
     return user ?? buildFallbackUser(id);
@@ -91,11 +101,19 @@ export async function findMyRequestByUserId(userId: string) {
 }
 
 export async function getMyDevicesByUserId(userId: string) {
-    return prisma.item.findMany({
+    return prisma.request.findMany({
         where: {
-            currentOwnerId: userId,
+            AND: [{ requesterId: userId }, { assignedItemId: { not: null } }],
+        },
+        include: {
+            assignedItem: true,
         },
     });
+    // return prisma.item.findMany({
+    //     where: {
+    //         currentOwnerId: userId,
+    //     },
+    // });
 }
 
 export async function findRequestsByRequester(
@@ -103,7 +121,10 @@ export async function findRequestsByRequester(
 ): Promise<RequestWithCategoryAndItem[]> {
     return prisma.request.findMany({
         where: { requesterId },
-        include: requestWithCategoryAndItem,
+        include: {
+            category: true,
+            assignedItem: true,
+        },
         orderBy: { createdAt: 'desc' },
     });
 }
