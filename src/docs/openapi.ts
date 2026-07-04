@@ -1,3 +1,5 @@
+import { apiExamples } from './api-examples';
+
 export const openApiDocument = {
     openapi: '3.0.3',
     info: {
@@ -68,6 +70,7 @@ export const openApiDocument = {
                     note: { type: 'string' },
                     isWfh: { type: 'boolean' },
                 },
+                example: apiExamples.createRequest,
             },
             CreateExtensionRequestInput: {
                 type: 'object',
@@ -75,6 +78,7 @@ export const openApiDocument = {
                 properties: {
                     extended_to: { type: 'string', format: 'date-time' },
                 },
+                example: apiExamples.createExtensionRequest,
             },
             ReturnDeviceInput: {
                 type: 'object',
@@ -85,6 +89,7 @@ export const openApiDocument = {
                         format: 'uri',
                     },
                 },
+                example: apiExamples.returnDevice,
             },
             CreateSupportRequestInput: {
                 type: 'object',
@@ -96,6 +101,7 @@ export const openApiDocument = {
                     },
                     description: { type: 'string' },
                 },
+                example: apiExamples.createSupportRequest,
             },
             CreateHandoverRequestInput: {
                 type: 'object',
@@ -107,12 +113,14 @@ export const openApiDocument = {
                         minimum: 1,
                     },
                 },
+                example: apiExamples.createHandoverRequest,
             },
             ManagerApproveInput: {
                 type: 'object',
                 properties: {
                     managerDecisionNote: { type: 'string' },
                 },
+                example: apiExamples.managerApprove,
             },
             ManagerRejectInput: {
                 type: 'object',
@@ -120,6 +128,7 @@ export const openApiDocument = {
                     managerDecisionNote: { type: 'string' },
                     rejectedReason: { type: 'string' },
                 },
+                example: apiExamples.managerReject,
             },
         },
         responses: {
@@ -154,7 +163,16 @@ export const openApiDocument = {
             get: {
                 summary: 'Screen 1 - My Devices',
                 tags: ['Devices'],
-                responses: { '200': { description: 'Assigned requests' } },
+                responses: {
+                    '200': {
+                        description: 'Assigned requests',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.myDevicesResponse,
+                            },
+                        },
+                    },
+                },
             },
         },
         '/me/devices/{itemId}': {
@@ -166,7 +184,14 @@ export const openApiDocument = {
                     { $ref: '#/paths/~1me~1devices~1{itemId}/parameters/0' },
                 ],
                 responses: {
-                    '200': { description: 'Device detail' },
+                    '200': {
+                        description: 'Device detail',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.deviceDetailResponse,
+                            },
+                        },
+                    },
                     '404': { $ref: '#/components/responses/NotFound' },
                 },
             },
@@ -194,7 +219,14 @@ export const openApiDocument = {
                     },
                 },
                 responses: {
-                    '201': { description: 'Request created' },
+                    '201': {
+                        description: 'Request created',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.requestCreatedResponse,
+                            },
+                        },
+                    },
                     '400': { $ref: '#/components/responses/BadRequest' },
                 },
             },
@@ -203,7 +235,16 @@ export const openApiDocument = {
             get: {
                 summary: 'Screen 4 - List Manager Pending Approvals',
                 tags: ['Manager'],
-                responses: { '200': { description: 'Pending approvals' } },
+                responses: {
+                    '200': {
+                        description: 'Pending approvals',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.managerApprovalsResponse,
+                            },
+                        },
+                    },
+                },
             },
         },
         '/manager/requests/{requestId}/approve': {
@@ -224,7 +265,16 @@ export const openApiDocument = {
                         },
                     },
                 },
-                responses: { '200': { description: 'Request approved' } },
+                responses: {
+                    '200': {
+                        description: 'Request approved',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.requestCreatedResponse,
+                            },
+                        },
+                    },
+                },
             },
             parameters: [
                 {
@@ -253,7 +303,16 @@ export const openApiDocument = {
                         },
                     },
                 },
-                responses: { '200': { description: 'Request rejected' } },
+                responses: {
+                    '200': {
+                        description: 'Request rejected',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.requestCreatedResponse,
+                            },
+                        },
+                    },
+                },
             },
             parameters: [
                 {
@@ -268,7 +327,16 @@ export const openApiDocument = {
             get: {
                 summary: 'Screen 5 - List Device Extension Requests',
                 tags: ['Extensions'],
-                responses: { '200': { description: 'Extension history' } },
+                responses: {
+                    '200': {
+                        description: 'Extension history',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.extensionRequestsResponse,
+                            },
+                        },
+                    },
+                },
             },
             post: {
                 summary: 'Screen 5 - Create Extension Request',
@@ -283,7 +351,16 @@ export const openApiDocument = {
                         },
                     },
                 },
-                responses: { '201': { description: 'Extension created' } },
+                responses: {
+                    '201': {
+                        description: 'Extension created',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.extensionRequestDetailResponse,
+                            },
+                        },
+                    },
+                },
             },
             parameters: [
                 {
@@ -298,7 +375,16 @@ export const openApiDocument = {
             get: {
                 summary: 'Screen 5 - Extension Request Detail',
                 tags: ['Extensions'],
-                responses: { '200': { description: 'Extension detail' } },
+                responses: {
+                    '200': {
+                        description: 'Extension detail',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.extensionRequestDetailResponse,
+                            },
+                        },
+                    },
+                },
             },
             parameters: [
                 {
@@ -323,7 +409,16 @@ export const openApiDocument = {
                         },
                     },
                 },
-                responses: { '200': { description: 'Return initiated' } },
+                responses: {
+                    '200': {
+                        description: 'Return initiated',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.returnInitiatedResponse,
+                            },
+                        },
+                    },
+                },
             },
             parameters: [
                 {
@@ -349,7 +444,14 @@ export const openApiDocument = {
                     },
                 },
                 responses: {
-                    '201': { description: 'Support request created' },
+                    '201': {
+                        description: 'Support request created',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.supportRequestDetailResponse,
+                            },
+                        },
+                    },
                 },
             },
             parameters: [
@@ -375,14 +477,32 @@ export const openApiDocument = {
                         },
                     },
                 ],
-                responses: { '200': { description: 'Support requests' } },
+                responses: {
+                    '200': {
+                        description: 'Support requests',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.supportRequestsResponse,
+                            },
+                        },
+                    },
+                },
             },
         },
         '/me/support-requests/{id}': {
             get: {
                 summary: 'Screen 7 - Support Request Detail',
                 tags: ['Support'],
-                responses: { '200': { description: 'Support request detail' } },
+                responses: {
+                    '200': {
+                        description: 'Support request detail',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.supportRequestDetailResponse,
+                            },
+                        },
+                    },
+                },
             },
             parameters: [
                 {
@@ -405,7 +525,16 @@ export const openApiDocument = {
                         schema: { type: 'string', enum: ['borrower', 'owner'] },
                     },
                 ],
-                responses: { '200': { description: 'Handover requests' } },
+                responses: {
+                    '200': {
+                        description: 'Handover requests',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.handoverRequestsResponse,
+                            },
+                        },
+                    },
+                },
             },
             post: {
                 summary: 'Screen 8 - Create Handover Request',
@@ -421,7 +550,14 @@ export const openApiDocument = {
                     },
                 },
                 responses: {
-                    '201': { description: 'Handover request created' },
+                    '201': {
+                        description: 'Handover request created',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.handoverRequestsResponse[0],
+                            },
+                        },
+                    },
                 },
             },
         },
@@ -429,7 +565,16 @@ export const openApiDocument = {
             patch: {
                 summary: 'Screen 8 - Accept Handover Request',
                 tags: ['Handover'],
-                responses: { '200': { description: 'Handover accepted' } },
+                responses: {
+                    '200': {
+                        description: 'Handover accepted',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.handoverRequestsResponse[0],
+                            },
+                        },
+                    },
+                },
             },
             parameters: [
                 {
@@ -444,7 +589,16 @@ export const openApiDocument = {
             patch: {
                 summary: 'Screen 8 - Reject Handover Request',
                 tags: ['Handover'],
-                responses: { '200': { description: 'Handover rejected' } },
+                responses: {
+                    '200': {
+                        description: 'Handover rejected',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.handoverRequestsResponse[0],
+                            },
+                        },
+                    },
+                },
             },
             parameters: [
                 {
@@ -459,7 +613,16 @@ export const openApiDocument = {
             patch: {
                 summary: 'Screen 8 - Cancel Handover Request',
                 tags: ['Handover'],
-                responses: { '200': { description: 'Handover cancelled' } },
+                responses: {
+                    '200': {
+                        description: 'Handover cancelled',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.handoverRequestsResponse[0],
+                            },
+                        },
+                    },
+                },
             },
             parameters: [
                 {
@@ -474,7 +637,16 @@ export const openApiDocument = {
             patch: {
                 summary: 'Screen 8 - Complete Handover Request',
                 tags: ['Handover'],
-                responses: { '200': { description: 'Handover completed' } },
+                responses: {
+                    '200': {
+                        description: 'Handover completed',
+                        content: {
+                            'application/json': {
+                                example: apiExamples.handoverRequestsResponse[0],
+                            },
+                        },
+                    },
+                },
             },
             parameters: [
                 {

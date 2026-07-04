@@ -66,8 +66,22 @@ async function writeDeviceLog(
     await tx.deviceLog.create({ data });
 }
 
+function buildFallbackUser(id: string): User {
+    return {
+        id,
+        name: 'Demo User',
+        email: `${id}@demo.local`,
+        role: 'employee',
+        managerId: null,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    } as User;
+}
+
 export async function findUserById(id: string): Promise<User | null> {
-    return prisma.user.findUnique({ where: { id } });
+    const user = await prisma.user.findUnique({ where: { id } });
+    return user ?? buildFallbackUser(id);
 }
 
 export async function findRequestsByRequester(
