@@ -1,5 +1,6 @@
 import express from 'express';
-import { mobileRouter } from './modules/mobile/mobile.routes';
+import docsRouter from './docs/docs.routes';
+import mobile2Router from './modules/mobile2/mobile.routes';
 import authenticateMiddleware from './middlewares/auth.middleware';
 import { errorHandlerMiddleware } from './middlewares/error-handler.middleware';
 import { requestLoggerMiddleware } from './middlewares/request-logger.middleware';
@@ -17,10 +18,11 @@ export function createApp(): express.Express {
     app.use(rateLimitMiddleware);
     app.use(requestLoggerMiddleware);
     app.use(express.json());
+    app.use(docsRouter);
     app.use(authenticateMiddleware);
 
-    app.use('/api/v1/mobile', mobileRouter);
-    app.use('/', mobileRouter);
+    app.use('/api/v1/mobile', mobile2Router);
+    app.use('/', mobile2Router);
 
     app.use(errorHandlerMiddleware);
 

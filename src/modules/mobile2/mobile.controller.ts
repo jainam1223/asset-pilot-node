@@ -3,21 +3,41 @@ import { buildSuccessResponse } from '../../common/api-response';
 import { AppError } from '../../common/errors/app-error';
 import type {
     ApproveRequestDto,
+    CreateExtensionRequestDto,
+    CreateHandoverRequestDto,
     CreateRequestDto,
+    CreateSupportRequestDto,
+    EntityIdParams,
+    HandoverRequestsQuery,
     ItemIdParams,
     RejectRequestDto,
     RequestIdParams,
+    ReturnDeviceDto,
+    SupportRequestsQuery,
 } from './mobile.dto';
 import {
+    acceptHandoverRequest,
     approveRequest,
+    cancelHandoverRequest,
+    completeHandoverRequest,
+    createExtensionRequest,
+    createHandoverRequest,
     createRequest,
+    createSupportRequest,
     getApprovalsForManager,
     getDeviceDetail,
+    getExtensionRequestDetail,
     getMyDevices,
+    getSupportRequestDetail,
+    initiateReturn,
+    listExtensionRequests,
+    listHandoverRequests,
+    listSupportRequests,
+    rejectHandoverRequest,
     rejectRequest,
 } from './mobile.service';
 
-function getAuthenticatedUserId(req: Request): string {
+function getAuthenticatedUserId(req: { user?: { id: string } }): string {
     const userId = req.user?.id;
 
     if (!userId) {
@@ -101,4 +121,213 @@ export async function rejectManagerRequest(
         req.body,
     );
     res.json(buildSuccessResponse(updated, 'Request rejected successfully'));
+}
+
+export async function submitExtensionRequest(
+    req: Request<ItemIdParams, unknown, CreateExtensionRequestDto>,
+    res: Response,
+): Promise<void> {
+    const extensionRequest = await createExtensionRequest(
+        getAuthenticatedUserId(req),
+        req.params.itemId,
+        req.body,
+    );
+    res.status(201).json(
+        buildSuccessResponse(
+            extensionRequest,
+            'Extension request created successfully',
+            201,
+        ),
+    );
+}
+
+export async function listDeviceExtensionRequests(
+    req: Request<ItemIdParams>,
+    res: Response,
+): Promise<void> {
+    const extensionRequests = await listExtensionRequests(
+        getAuthenticatedUserId(req),
+        req.params.itemId,
+    );
+    res.json(
+        buildSuccessResponse(
+            extensionRequests,
+            'Extension requests fetched successfully',
+        ),
+    );
+}
+
+export async function getMyExtensionRequestDetail(
+    req: Request<EntityIdParams>,
+    res: Response,
+): Promise<void> {
+    const extensionRequest = await getExtensionRequestDetail(
+        getAuthenticatedUserId(req),
+        req.params.id,
+    );
+    res.json(
+        buildSuccessResponse(
+            extensionRequest,
+            'Extension request detail fetched successfully',
+        ),
+    );
+}
+
+export async function initiateDeviceReturn(
+    req: Request<ItemIdParams, unknown, ReturnDeviceDto>,
+    res: Response,
+): Promise<void> {
+    const result = await initiateReturn(
+        getAuthenticatedUserId(req),
+        req.params.itemId,
+        req.body,
+    );
+    res.json(buildSuccessResponse(result, 'Return initiated successfully'));
+}
+
+export async function submitSupportRequest(
+    req: Request<ItemIdParams, unknown, CreateSupportRequestDto>,
+    res: Response,
+): Promise<void> {
+    const supportRequest = await createSupportRequest(
+        getAuthenticatedUserId(req),
+        req.params.itemId,
+        req.body,
+    );
+    res.status(201).json(
+        buildSuccessResponse(
+            supportRequest,
+            'Support request created successfully',
+            201,
+        ),
+    );
+}
+
+export async function listMySupportRequests(
+    req: Request<unknown, unknown, unknown, SupportRequestsQuery>,
+    res: Response,
+): Promise<void> {
+    const supportRequests = await listSupportRequests(
+        getAuthenticatedUserId(req),
+        req.query,
+    );
+    res.json(
+        buildSuccessResponse(
+            supportRequests,
+            'Support requests fetched successfully',
+        ),
+    );
+}
+
+export async function getMySupportRequestDetail(
+    req: Request<EntityIdParams>,
+    res: Response,
+): Promise<void> {
+    const supportRequest = await getSupportRequestDetail(
+        getAuthenticatedUserId(req),
+        req.params.id,
+    );
+    res.json(
+        buildSuccessResponse(
+            supportRequest,
+            'Support request detail fetched successfully',
+        ),
+    );
+}
+
+export async function submitHandoverRequest(
+    req: Request<unknown, unknown, CreateHandoverRequestDto>,
+    res: Response,
+): Promise<void> {
+    const handoverRequest = await createHandoverRequest(
+        getAuthenticatedUserId(req),
+        req.body,
+    );
+    res.status(201).json(
+        buildSuccessResponse(
+            handoverRequest,
+            'Handover request created successfully',
+            201,
+        ),
+    );
+}
+
+export async function listMyHandoverRequests(
+    req: Request<unknown, unknown, unknown, HandoverRequestsQuery>,
+    res: Response,
+): Promise<void> {
+    const handoverRequests = await listHandoverRequests(
+        getAuthenticatedUserId(req),
+        req.query,
+    );
+    res.json(
+        buildSuccessResponse(
+            handoverRequests,
+            'Handover requests fetched successfully',
+        ),
+    );
+}
+
+export async function acceptMyHandoverRequest(
+    req: Request<EntityIdParams>,
+    res: Response,
+): Promise<void> {
+    const handoverRequest = await acceptHandoverRequest(
+        getAuthenticatedUserId(req),
+        req.params.id,
+    );
+    res.json(
+        buildSuccessResponse(
+            handoverRequest,
+            'Handover request accepted successfully',
+        ),
+    );
+}
+
+export async function rejectMyHandoverRequest(
+    req: Request<EntityIdParams>,
+    res: Response,
+): Promise<void> {
+    const handoverRequest = await rejectHandoverRequest(
+        getAuthenticatedUserId(req),
+        req.params.id,
+    );
+    res.json(
+        buildSuccessResponse(
+            handoverRequest,
+            'Handover request rejected successfully',
+        ),
+    );
+}
+
+export async function cancelMyHandoverRequest(
+    req: Request<EntityIdParams>,
+    res: Response,
+): Promise<void> {
+    const handoverRequest = await cancelHandoverRequest(
+        getAuthenticatedUserId(req),
+        req.params.id,
+    );
+    res.json(
+        buildSuccessResponse(
+            handoverRequest,
+            'Handover request cancelled successfully',
+        ),
+    );
+}
+
+export async function completeMyHandoverRequest(
+    req: Request<EntityIdParams>,
+    res: Response,
+): Promise<void> {
+    const handoverRequest = await completeHandoverRequest(
+        getAuthenticatedUserId(req),
+        req.params.id,
+    );
+    res.json(
+        buildSuccessResponse(
+            handoverRequest,
+            'Handover request completed successfully',
+        ),
+    );
 }
