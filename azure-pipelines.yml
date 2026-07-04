@@ -5,13 +5,11 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  # Define these values here OR in the Azure DevOps Pipeline UI:
-  azureServiceConnection: 'your-service-connection-name'
+  # The name of the Docker Registry Service Connection you created in Azure DevOps
+  dockerRegistryServiceConnection: 'acr-connection'
   
   # Application Configuration:
-  resourceGroup: 'prodessy'
-  acrName: 'assetpilotacr2026'
-  imageName: 'asset-pilot'
+  imageRepository: 'asset-pilot'
   imageTag: 'latest'
 
 stages:
@@ -21,29 +19,12 @@ stages:
   - job: DockerBuildPush
     displayName: 'Build and Push to ACR'
     steps:
-    - task: AzureCLI@2
-      displayName: 'Docker Build and Push'
+    - task: Docker@2
+      displayName: 'Build and Push Image'
       inputs:
-        azureSubscription: '$(azureServiceConnection)'
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          set -e
-
-          echo "Getting ACR credentials..."
-          # Note: Ensure the ACR is already created before this runs
-          ACR_LOGIN_SERVER=$(az acr show --name $(acrName) --resource-group $(resourceGroup) --query loginServer -o tsv)
-          ACR_USERNAME=$(az acr credential show --name $(acrName) --resource-group $(resourceGroup) --query "username" -o tsv)
-          ACR_PASSWORD=$(az acr credential show --name $(acrName) --resource-group $(resourceGroup) --query "passwords[0].value" -o tsv)
-          
-          echo "Logging in to Docker Registry..."
-          echo $ACR_PASSWORD | docker login $ACR_LOGIN_SERVER -u $ACR_USERNAME --password-stdin
-          
-          echo "Building Docker Image..."
-          FULL_IMAGE_NAME="$ACR_LOGIN_SERVER/$(imageName):$(imageTag)"
-          docker build -t $FULL_IMAGE_NAME .
-          
-          echo "Pushing Docker Image..."
-          docker push $FULL_IMAGE_NAME
-          
-          echo "Build and push complete!"
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(imageTag)
