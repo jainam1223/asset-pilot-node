@@ -22,7 +22,9 @@ import {
     acceptHandoverRequest,
     approveRequest,
     cancelHandoverRequest,
+    cancelRequestByUserId,
     completeHandoverRequest,
+    completeNonWfhReturnService,
     createExtensionRequest,
     createHandoverRequest,
     createRequest,
@@ -39,6 +41,7 @@ import {
     getUserService,
     initiateReturn,
     listExtensionRequests,
+    listEmployeeDevicesForManager,
     listHandoverRequests,
     listSupportRequests,
     rejectHandoverRequest,
@@ -134,6 +137,17 @@ export async function listManagerApprovals(
     );
 }
 
+export async function cancelRequest(
+    req: Request<RequestIdParams>,
+    res: Response,
+) {
+    const updated = await cancelRequestByUserId(
+        getAuthenticatedUserId(req),
+        req.params.requestId,
+    );
+    res.json(buildSuccessResponse(updated, 'Request cancelled'));
+}
+
 export async function approveManagerRequest(
     req: Request<RequestIdParams, unknown, ApproveRequestDto>,
     res: Response,
@@ -192,6 +206,20 @@ export async function listDeviceExtensionRequests(
     );
 }
 
+export async function listEmployeeDevicesByManagerID(
+    req: Request,
+    res: Response,
+): Promise<void> {
+    const employeeDevices = await listEmployeeDevicesForManager(
+        getAuthenticatedUserId(req),
+    );
+    res.json(
+        buildSuccessResponse(
+            employeeDevices,
+            'Employee devices fetched successfully',
+        ),
+    );
+}
 export async function getMyExtensionRequestDetail(
     req: Request<EntityIdParams>,
     res: Response,
@@ -218,6 +246,17 @@ export async function initiateDeviceReturn(
         req.body,
     );
     res.json(buildSuccessResponse(result, 'Return initiated successfully'));
+}
+
+export async function completeNonWfhDeviceReturn(
+    req: Request<ItemIdParams>,
+    res: Response,
+): Promise<void> {
+    const result = await completeNonWfhReturnService(
+        getAuthenticatedUserId(req),
+        req.params.itemId,
+    );
+    res.json(buildSuccessResponse(result, 'Device returned successfully'));
 }
 
 export async function submitSupportRequest(

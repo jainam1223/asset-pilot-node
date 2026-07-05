@@ -21,6 +21,7 @@ import {
     acceptHandoverForOwner,
     approveRequestByManager,
     cancelHandoverForBorrower,
+    cancelRequestById,
     completeHandoverForOwner,
     createAssetRequest,
     createExtensionRequestForDevice,
@@ -30,12 +31,14 @@ import {
     findCategoryById,
     findExtensionRequestDetail,
     findExtensionRequestsForDevice,
+    findEmployeeDevicesByManager,
     findHandoverRequestsForUser,
     findHandoversByItem,
     findItemLookupById,
     findManagerApprovals,
     findMyRequestByUserId,
     findRequestById,
+    findRequestByUserId,
     findRequestsByRequester,
     findSupportRequestDetail,
     findSupportRequestsByRequester,
@@ -44,10 +47,12 @@ import {
     getDeviceDetailRepo,
     getItemCategoryRepo,
     getMyDevicesByUserId,
+    completeNonWfhReturn,
     initiateWfhReturn,
     rejectHandoverForOwner,
     rejectRequestByManager,
     type ExtensionRequestSummary,
+    type EmployeeDevicesByManager,
     type HandoverRequestWithItem,
     type ItemLookup,
     type ManagerApprovalRequest,
@@ -183,9 +188,7 @@ export async function getItemCategoryService() {
     return getItemCategoryRepo();
 }
 
-export async function getMyRequests(
-    userId: string,
-): Promise<RequestWithCategoryAndItem[]> {
+export async function getMyRequests(userId: string) {
     const user = await getCurrentUser(userId);
     if (!user) {
         throw new AppError(
@@ -194,7 +197,16 @@ export async function getMyRequests(
             'authenticated_user_not_found',
         );
     }
-    return findRequestsByRequester(user.id);
+    const [request, extention] = await findRequestsByRequester(user.id);
+    const finalExtension = extention.map((ext) => {
+        const { originalRequest, ...req } = ext;
+        return {
+            ...originalRequest,
+            ...req,
+        };
+    });
+    // console.log(data);
+    return [...request, ...finalExtension];
 }
 
 export async function getMyDevices(userId: string) {
@@ -295,6 +307,26 @@ export async function getApprovalsForManager(
     return findManagerApprovals(user.id);
 }
 
+export async function cancelRequestByUserId(userId: string, requestId: string) {
+    const user = await getCurrentUser(userId);
+    if (!user) {
+        throw new AppError(
+            'Authenticated user not found',
+            401,
+            'authenticated_user_not_found',
+        );
+    }
+    const request = await findRequestByUserId(requestId, userId);
+    if (!request) {
+        throw new AppError(
+            'Request is not in pending state',
+            404,
+            'request_not_pending',
+        );
+    }
+    return await cancelRequestById(requestId);
+}
+
 export async function approveRequest(
     userId: string,
     requestId: string,
@@ -343,7 +375,7 @@ export async function createExtensionRequest(
             throw new Error('ACTIVE_ASSIGNMENT_NOT_FOUND');
         }
 
-        if (dto.extended_to <= activeRequest.assignedTo) {
+        if (dto.extendedTo <= activeRequest.assignedTo) {
             throw new AppError(
                 'extended_to must be greater than the current assigned_to date',
                 400,
@@ -354,7 +386,7 @@ export async function createExtensionRequest(
         return await createExtensionRequestForDevice(
             userId,
             itemId,
-            dto.extended_to,
+            dto.extendedTo,
         );
     } catch (error) {
         mapWorkflowError(error);
@@ -367,6 +399,22 @@ export async function listExtensionRequests(
 ): Promise<unknown[]> {
     await getCurrentUser(userId);
     return findExtensionRequestsForDevice(userId, itemId);
+}
+
+export async function listEmployeeDevicesForManager(
+    managerId: string,
+): Promise<EmployeeDevicesByManager[]> {
+    const manager = await getCurrentUser(managerId);
+
+    if (manager.role !== 'manager') {
+        throw new AppError(
+            'Only managers can view employee devices',
+            403,
+            'manager_access_required',
+        );
+    }
+
+    return findEmployeeDevicesByManager(manager.id);
 }
 
 export async function getExtensionRequestDetail(
@@ -394,7 +442,19 @@ export async function initiateReturn(
 ): Promise<unknown> {
     try {
         await getCurrentUser(userId);
-        return await initiateWfhReturn(userId, itemId, dto.return_tracking_url);
+        return await initiateWfhReturn(userId, itemId, dto.returnTrackingUrl);
+    } catch (error) {
+        mapWorkflowError(error);
+    }
+}
+
+export async function completeNonWfhReturnService(
+    userId: string,
+    itemId: string,
+): Promise<unknown> {
+    try {
+        await getCurrentUser(userId);
+        return await completeNonWfhReturn(userId, itemId);
     } catch (error) {
         mapWorkflowError(error);
     }

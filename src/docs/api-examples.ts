@@ -717,6 +717,47 @@ export const apiExamples = {
                 ),
             },
         },
+        managerEmployeeDevices: {
+            paul: {
+                summary: 'Paul direct employees with request-backed devices',
+                value: success(
+                    [
+                        {
+                            ...users.quinn,
+                            requests: [managerApprovals.paulIphone],
+                        },
+                        {
+                            ...users.rachel,
+                            requests: [managerApprovals.paulMobile],
+                        },
+                    ],
+                    'Employee devices fetched successfully',
+                ),
+            },
+            emmaWhite: {
+                summary:
+                    'Emma White direct employees with all request statuses',
+                value: success(
+                    [
+                        {
+                            ...users.victor,
+                            requests: [
+                                assignedRequests.victorDell,
+                                assignedRequests.victorBose,
+                            ],
+                        },
+                        {
+                            ...users.emmaKing,
+                            requests: [
+                                assignedRequests.emmaKeyboard,
+                                managerApprovals.emmaIphone12,
+                            ],
+                        },
+                    ],
+                    'Employee devices fetched successfully',
+                ),
+            },
+        },
         managerDecision: {
             approved: {
                 summary: 'Manager approved',
@@ -780,6 +821,38 @@ export const apiExamples = {
                     'Return for this device must be initiated by IT.',
                     400,
                     'return_requires_it',
+                ),
+            },
+        },
+        nonWfhReturnCompleted: {
+            success: {
+                summary: 'Non-WFH device returned – status back to available',
+                value: success(
+                    {
+                        item: {
+                            ...items.dellXps,
+                            status: 'available',
+                            currentOwnerId: null,
+                        },
+                        request: {
+                            id: 'a1b2c3d4-0000-4000-8000-000000000001',
+                            requesterId: users.victor.id,
+                            assignedItemId: items.dellXps.id,
+                            status: 'completed',
+                            isWfh: false,
+                            completedAt: '2026-07-05T05:00:00.000Z',
+                            completedById: users.victor.id,
+                        },
+                    },
+                    'Device returned successfully',
+                ),
+            },
+            notFound: {
+                summary: 'No active assigned request found for this device',
+                value: error(
+                    'Active assigned request not found',
+                    404,
+                    'active_assignment_not_found',
                 ),
             },
         },

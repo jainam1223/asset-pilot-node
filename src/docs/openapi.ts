@@ -382,6 +382,21 @@ export const openApiDocument = {
                 },
             },
         },
+        '/manager/employee-devices': {
+            get: {
+                summary: 'Manager - Employee Devices By Request',
+                description:
+                    'Returns every active direct employee under the authenticated manager and all of their asset requests across every request status. Each request includes category and assignedItem when a device has been assigned.',
+                tags: ['Manager'],
+                parameters: operationParameters(),
+                responses: {
+                    '200': jsonResponse(
+                        'Employee request-backed devices',
+                        apiExamples.responses.managerEmployeeDevices,
+                    ),
+                },
+            },
+        },
         '/manager/requests/{requestId}/approve': {
             patch: {
                 summary: 'Screen 4 - Approve Request',
@@ -501,6 +516,24 @@ export const openApiDocument = {
                     '400': { $ref: '#/components/responses/BadRequest' },
                     '404': { $ref: '#/components/responses/NotFound' },
                     '409': { $ref: '#/components/responses/Conflict' },
+                },
+            },
+        },
+        '/me/devices/{itemId}/return-non-wfh': {
+            post: {
+                summary: 'Complete Non-WFH Return',
+                description:
+                    'Instantly completes the return for a non-WFH (office-based) device. No tracking URL required. Sets the device status back to `available`, clears the owner, marks the request as `completed`, and logs a `return_received` milestone event. Use this for company-owned devices that are physically handed back at the office.',
+                tags: ['Returns'],
+                parameters: operationParameters(
+                    pathUuidParam('itemId', apiExamples.items.dellXps.id),
+                ),
+                responses: {
+                    '200': jsonResponse(
+                        'Device returned successfully',
+                        apiExamples.responses.nonWfhReturnCompleted,
+                    ),
+                    '404': { $ref: '#/components/responses/NotFound' },
                 },
             },
         },

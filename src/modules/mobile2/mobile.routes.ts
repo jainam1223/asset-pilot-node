@@ -8,6 +8,7 @@ import {
     getMyExtensionRequestDetail,
     getMyDeviceDetail,
     getMySupportRequestDetail,
+    completeNonWfhDeviceReturn,
     initiateDeviceReturn,
     listDeviceExtensionRequests,
     listMyHandoverRequests,
@@ -25,6 +26,8 @@ import {
     getItemCategory,
     login,
     deviceDetailsFromId,
+    cancelRequest,
+    listEmployeeDevicesByManagerID,
 } from './mobile.controller';
 import {
     approveRequestSchema,
@@ -57,6 +60,7 @@ router.post('/login', login);
 router.get('/items-category', getItemCategory);
 router.get('/me/requests', listMyRequests);
 router.get('/me/devices', listMyDevices);
+router.get('/me/requests/:requestId/cancel', cancelRequest);
 // router.get('/me/assigned-devices', listMyDevices)
 router.get(
     '/me/devices/:itemId',
@@ -94,6 +98,8 @@ router.get(
     validateParams(itemIdParamsSchema),
     listDeviceExtensionRequests,
 );
+
+router.get('/manager/employee-devices', listEmployeeDevicesByManagerID);
 router.get(
     '/me/extension-requests/:id',
     validateParams(extensionRequestIdParamsSchema),
@@ -104,6 +110,11 @@ router.post(
     validateParams(itemIdParamsSchema),
     validateBody(returnDeviceSchema),
     initiateDeviceReturn,
+);
+router.post(
+    '/me/devices/:itemId/return-non-wfh',
+    validateParams(itemIdParamsSchema),
+    completeNonWfhDeviceReturn,
 );
 router.post(
     '/me/devices/:itemId/support-requests',

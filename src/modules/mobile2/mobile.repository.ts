@@ -33,6 +33,17 @@ export type ManagerApprovalRequest = Prisma.RequestGetPayload<{
     include: typeof managerApprovalInclude;
 }>;
 
+const employeeDevicesByManagerInclude = {
+    requests: {
+        include: requestWithCategoryAndItem,
+        orderBy: { createdAt: 'desc' },
+    },
+} satisfies Prisma.UserInclude;
+
+export type EmployeeDevicesByManager = Prisma.UserGetPayload<{
+    include: typeof employeeDevicesByManagerInclude;
+}>;
+
 export type ItemLookup = Prisma.ItemGetPayload<{
     include: typeof itemLookupInclude;
 }>;
@@ -82,6 +93,28 @@ function buildFallbackUser(id: string): User {
 export async function findUserByEmail(email: string) {
     return await prisma.user.findUnique({
         where: { email },
+        include: { manager: true },
+    });
+}
+
+export async function findRequestByUserId(requestId: string, userId: string) {
+    return await prisma.request.findFirst({
+        where: {
+            requesterId: userId,
+            id: requestId,
+            OR: [
+                { status: 'pending_it_approval' },
+                { status: 'pending_mgr_approval' },
+                { status: 'requested' },
+            ],
+        },
+    });
+}
+
+export async function cancelRequestById(requestId: string) {
+    return await prisma.request.update({
+        where: { id: requestId },
+        data: { status: 'cancelled' },
     });
 }
 
@@ -116,17 +149,26 @@ export async function getMyDevicesByUserId(userId: string) {
     // });
 }
 
-export async function findRequestsByRequester(
-    requesterId: string,
-): Promise<RequestWithCategoryAndItem[]> {
-    return prisma.request.findMany({
-        where: { requesterId },
-        include: {
-            category: true,
-            assignedItem: true,
-        },
-        orderBy: { createdAt: 'desc' },
-    });
+export async function findRequestsByRequester(requesterId: string) {
+    const data = await Promise.all([
+        prisma.request.findMany({
+            where: { requesterId },
+            include: {
+                category: true,
+                assignedItem: true,
+            },
+            orderBy: { createdAt: 'desc' },
+        }),
+        prisma.extensionRequest.findMany({
+            where: { requesterId },
+            include: {
+                originalRequest: {
+                    include: { category: true, assignedItem: true },
+                },
+            },
+        }),
+    ]);
+    return data;
 }
 
 export async function findAssignmentForRequester(
@@ -304,6 +346,20 @@ export async function findExtensionRequestsForDevice(
     });
 }
 
+export async function findEmployeeDevicesByManager(
+    managerId: string,
+): Promise<EmployeeDevicesByManager[]> {
+    return prisma.user.findMany({
+        where: {
+            managerId,
+            role: 'employee',
+            isActive: true,
+        },
+        include: employeeDevicesByManagerInclude,
+        orderBy: { name: 'asc' },
+    });
+}
+
 export async function getDeviceDetailRepo(deviceId: string) {
     return await prisma.item.findUnique({
         where: { id: deviceId },
@@ -388,6 +444,49 @@ export async function initiateWfhReturn(
         return { item, request: updatedRequest };
     });
 }
+export async function completeNonWfhReturn(userId: string, itemId: string) {
+    return prisma.$transaction(async (tx) => {
+        const request = await tx.request.findFirst({
+            where: {
+                requesterId: userId,
+                assignedItemId: itemId,
+                status: 'assigned',
+                assignedItem: { currentOwnerId: userId },
+
+            },
+            include: { assignedItem: true },
+            orderBy: { createdAt: 'desc' },
+        });
+        if (!request || !request.assignedItem) {
+            throw new Error('ACTIVE_ASSIGNMENT_NOT_FOUND');
+        }
+        // Update item status back to available (non-WFH device goes straight back to stock)
+        const item = await tx.item.update({
+            where: { id: itemId },
+            data: { status: 'available', currentOwnerId: null },
+        });
+        // Mark request as completed
+        const updatedRequest = await tx.request.update({
+            where: { id: request.id },
+            data: {
+                status: 'completed',
+                completedAt: new Date(),
+                completedById: userId,
+            },
+        });
+        await writeDeviceLog(tx, {
+            itemId,
+            eventType: 'return_received',
+            actorId: userId,
+            actorRole: 'employee',
+            requestId: request.id,
+            metadata: {},
+            isMilestone: true,
+        });
+        return { item, request: updatedRequest };
+    });
+}
+
 
 export async function createSupportRequestForDevice(
     userId: string,
