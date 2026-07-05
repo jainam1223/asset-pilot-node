@@ -157,6 +157,7 @@ export async function findRequestsByRequester(
         include: {
             category: true,
             assignedItem: true,
+            // extensionRequests:true
         },
         orderBy: { createdAt: 'desc' },
     });
