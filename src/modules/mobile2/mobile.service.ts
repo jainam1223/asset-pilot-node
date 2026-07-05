@@ -31,6 +31,7 @@ import {
     findCategoryById,
     findExtensionRequestDetail,
     findExtensionRequestsForDevice,
+    findEmployeeDevicesByManager,
     findHandoverRequestsForUser,
     findHandoversByItem,
     findItemLookupById,
@@ -50,6 +51,7 @@ import {
     rejectHandoverForOwner,
     rejectRequestByManager,
     type ExtensionRequestSummary,
+    type EmployeeDevicesByManager,
     type HandoverRequestWithItem,
     type ItemLookup,
     type ManagerApprovalRequest,
@@ -385,6 +387,22 @@ export async function listExtensionRequests(
 ): Promise<unknown[]> {
     await getCurrentUser(userId);
     return findExtensionRequestsForDevice(userId, itemId);
+}
+
+export async function listEmployeeDevicesForManager(
+    managerId: string,
+): Promise<EmployeeDevicesByManager[]> {
+    const manager = await getCurrentUser(managerId);
+
+    if (manager.role !== 'manager') {
+        throw new AppError(
+            'Only managers can view employee devices',
+            403,
+            'manager_access_required',
+        );
+    }
+
+    return findEmployeeDevicesByManager(manager.id);
 }
 
 export async function getExtensionRequestDetail(
