@@ -6,6 +6,8 @@ import type {
     User,
 } from '@prisma/client';
 import { AppError } from '../../common/errors/app-error';
+import { sendEmail } from '../mail/mailer';
+import { EMAIL_TEMPLATES } from '../mail/template';
 import type {
     ApproveRequestDto,
     CreateExtensionRequestDto,
@@ -281,7 +283,7 @@ export async function createRequest(
         dto.requestedTo,
     );
 
-    return createAssetRequest({
+    const result = await createAssetRequest({
         requesterId: user.id,
         managerId: user.managerId ?? null,
         categoryId: category.id,
@@ -298,6 +300,17 @@ export async function createRequest(
             ? 'pending_mgr_approval'
             : 'pending_it_approval',
     });
+
+    // 🔔 Email: request submitted
+    sendEmail(EMAIL_TEMPLATES.requestCreated({
+        to: user.email,
+        name: user.name,
+        categoryName: category.name,
+        requestedFrom: requestedFrom.toLocaleDateString(),
+        requestedTo: requestedTo.toLocaleDateString(),
+    })).catch(console.error);
+
+    return result;
 }
 
 export async function getApprovalsForManager(
@@ -340,7 +353,16 @@ export async function approveRequest(
     }
 
     assertManagerCanDecide(request, user.id);
-    return approveRequestByManager(request.id, dto.managerDecisionNote ?? null);
+    const result = await approveRequestByManager(request.id, dto.managerDecisionNote ?? null);
+
+    // 🔔 Email: request approved
+    sendEmail(EMAIL_TEMPLATES.requestApproved({
+        to: result.requester.email,
+        name: result.requester.name,
+        deviceName: result.category.name,
+    })).catch(console.error);
+
+    return result;
 }
 
 export async function rejectRequest(
@@ -356,11 +378,21 @@ export async function rejectRequest(
     }
 
     assertManagerCanDecide(request, user.id);
-    return rejectRequestByManager(
+    const result = await rejectRequestByManager(
         request.id,
         dto.managerDecisionNote ?? null,
         dto.rejectedReason ?? null,
     );
+
+    // 🔔 Email: request rejected
+    sendEmail(EMAIL_TEMPLATES.requestRejected({
+        to: result.requester.email,
+        name: result.requester.name,
+        deviceName: result.category.name,
+        reason: dto.rejectedReason ?? 'No reason provided.',
+    })).catch(console.error);
+
+    return result;
 }
 
 export async function createExtensionRequest(
@@ -441,8 +473,18 @@ export async function initiateReturn(
     dto: ReturnDeviceDto,
 ): Promise<unknown> {
     try {
-        await getCurrentUser(userId);
-        return await initiateWfhReturn(userId, itemId, dto.returnTrackingUrl);
+        const user = await getCurrentUser(userId);
+        const result = await initiateWfhReturn(userId, itemId, dto.returnTrackingUrl);
+
+        // 🔔 Email: WFH return initiated
+        sendEmail(EMAIL_TEMPLATES.deviceReturnInitiated({
+            to: user.email,
+            name: user.name,
+            deviceName: result.item.name,
+            trackingUrl: dto.returnTrackingUrl,
+        })).catch(console.error);
+
+        return result;
     } catch (error) {
         mapWorkflowError(error);
     }
@@ -453,8 +495,17 @@ export async function completeNonWfhReturnService(
     itemId: string,
 ): Promise<unknown> {
     try {
-        await getCurrentUser(userId);
-        return await completeNonWfhReturn(userId, itemId);
+        const user = await getCurrentUser(userId);
+        const result = await completeNonWfhReturn(userId, itemId);
+
+        // 🔔 Email: non-WFH return completed
+        sendEmail(EMAIL_TEMPLATES.deviceReturnCompleted({
+            to: user.email,
+            name: user.name,
+            deviceName: result.item.name,
+        })).catch(console.error);
+
+        return result;
     } catch (error) {
         mapWorkflowError(error);
     }
